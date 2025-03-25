@@ -1,5 +1,7 @@
 from django.http.response import HttpResponse , JsonResponse
 from django.shortcuts import render
+from django.db import transaction
+from Services.models import Origincard , Moneytransfer
 import os , json
 
 def Fund_transfer(request):
@@ -11,8 +13,45 @@ def Fund_transfer(request):
         if len (card_from) != 16 or len(card_to) != 16 :
             return JsonResponse({"error = The card number must be 16 digits."} , status = 400)
         
+        try: 
+            amount = int(amount)  
+        except ValueError:
+            return JsonResponse({"error": "The transfer value must be a number."}, status=400)
+        
         if amount <= 0 :
             return JsonResponse({"error = The amount must be greater than zero!"} , status = 400 )
+
+        
+        with transaction.atomic():
+
+            if Origincard.inventory < amount :
+                return JsonResponse({"error": "The origin card inventory is not sufficient."})
+            
+            Origincard.inventory -= amount
+            Origincard.save()
+            
+    return JsonResponse({"message": "The transfer was successful."}, status=200)
+
+
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
